@@ -13,27 +13,40 @@ import android.widget.TextView;
 
 import com.epicodus.myrestaurants.Constants;
 import com.epicodus.myrestaurants.R;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private SharedPreferences mSharedPreferences;
-    private SharedPreferences.Editor mEditor;
+//    private SharedPreferences mSharedPreferences;
+//    private SharedPreferences.Editor mEditor;
+
+    private DatabaseReference mSearchedLocationRefrence;
 
     @Bind(R.id.findRestaurantsButton) Button mFindRestaurantsButton;
     @Bind(R.id.locationEditText) EditText mLocationEditText;
+    @Bind(R.id.appNameTextView) TextView mAppNameTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        mSearchedLocationRefrence = FirebaseDatabase
+                .getInstance()
+                .getReference()
+                .child(Constants.FIREBASE_CHILD_SEARCHED_LOCATION);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
         Typeface ostrichFont = Typeface.createFromAsset(getAssets(), "fonts/ostrich-regular.ttf");
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mEditor = mSharedPreferences.edit();
+        mAppNameTextView.setTypeface(ostrichFont);
+
+//        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+//        mEditor = mSharedPreferences.edit();
 
         mFindRestaurantsButton.setOnClickListener(this);
     }
@@ -42,15 +55,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         if(view == mFindRestaurantsButton) {
             String location = mLocationEditText.getText().toString();
-            if(!(location).equals("")) {
-                addToSharedPreferences(location);
-            }
+
+            saveLocationToFirebase(location);
+
+//            if(!(location).equals("")) {
+//                addToSharedPreferences(location);
+//            }
+
             Intent intent = new Intent(MainActivity.this, RestaurantListActivity.class);
+            intent.putExtra("location", location);
             startActivity(intent);
         }
     }
-
-    private void addToSharedPreferences(String location) {
-        mEditor.putString(Constants.PREFERENCES_LOCATION_KEY, location).apply();
+    public void saveLocationToFirebase(String location) {
+        mSearchedLocationRefrence.push().setValue(location);
     }
+
+//    private void addToSharedPreferences(String location) {
+//        mEditor.putString(Constants.PREFERENCES_LOCATION_KEY, location).apply();
+//    }
 }
